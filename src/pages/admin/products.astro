@@ -1,0 +1,36 @@
+---
+export const prerender = false;
+import Base from "../../layouts/Base.astro";
+import { anonClient } from "../../lib/supabase";
+
+const sb = anonClient();
+let products: any[] = [];
+if (sb) {
+  const { data } = await sb.from("products").select("id, slug, name, price_pence, published_at").order("created_at");
+  products = data ?? [];
+}
+---
+<Base title="Products — Admin | Harmony Threads" description="" noindex={true}>
+  <div class="pt-28 pb-24 px-6 lg:px-12 max-w-5xl mx-auto">
+    <div class="flex items-center gap-4 mb-8">
+      <a href="/admin" class="text-sm text-[#6b6155] hover:text-[#c0392b]">← Dashboard</a>
+      <h1 class="font-display text-3xl font-bold">Products</h1>
+    </div>
+    <div class="bg-white border border-[#e8e2d6] rounded-sm overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-[#f0ece4] border-b border-[#e8e2d6]"><tr><th class="text-left px-4 py-3 font-semibold">Name</th><th class="text-left px-4 py-3 font-semibold">Slug</th><th class="text-left px-4 py-3 font-semibold">Price</th><th class="text-left px-4 py-3 font-semibold">Status</th><th class="text-left px-4 py-3 font-semibold">Actions</th></tr></thead>
+        <tbody class="divide-y divide-[#e8e2d6]">
+          {products.map(p => (
+            <tr class="hover:bg-[#faf7f2]">
+              <td class="px-4 py-3 font-medium">{p.name}</td>
+              <td class="px-4 py-3 font-mono text-xs text-[#6b6155]">{p.slug}</td>
+              <td class="px-4 py-3">£{(p.price_pence / 100).toFixed(2)}</td>
+              <td class="px-4 py-3"><span class={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${p.published_at ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{p.published_at ? 'Published' : 'Draft'}</span></td>
+              <td class="px-4 py-3"><a href={`/shop/${p.slug}`} target="_blank" class="text-[#c0392b] hover:underline text-xs">View</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Base>

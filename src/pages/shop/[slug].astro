@@ -1,0 +1,120 @@
+---
+export const prerender = false;
+import Base from "../../layouts/Base.astro";
+import { anonClient } from "../../lib/supabase";
+import { safeHtml } from "../../lib/sanitize";
+
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/shop");
+
+const sb = anonClient();
+if (!sb) return new Response("Server error", { status: 500 });
+
+const [{ data: product }] = await Promise.all([
+  sb.from("products").select("id, slug, name, description, body_html, price_pence, compare_at_pence, currency, image_url, gallery, tags, meta_title, meta_description, is_digital, requires_shipping").eq("slug", slug).not("published_at", "is", null).maybeSingle(),
+]);
+
+if (!product) return new Response("Not found", { status: 404 });
+
+const { data: productVariants } = await sb.from("product_variants").select("id, sku, size, color, price_pence, inventory, image_url").eq("product_id", product.id).order("sort_order");
+
+const sizes = [...new Set((productVariants ?? []).map((v: any) => v.size).filter(Boolean))];
+const colors = [...new Set((productVariants ?? []).map((v: any) => v.color).filter(Boolean))];
+const hasVariants = sizes.length > 0 || colors.length > 0;
+
+const siteUrl = Astro.site?.toString() ?? "https://harmony-threads-a7k2.vercel.app";
+const productSchema = { "@context": "https://schema.org", "@type": "Product", "name": product.name, "description": product.description?.slice(0, 500), "image": product.image_url, "offers": { "@type": "Offer", "price": (product.price_pence / 100).toFixed(2), "priceCurrency": product.currency ?? "GBP", "availability": "https://schema.org/InStock" } };
+---
+<Base title={product.meta_title ?? `${product.name} | Harmony Threads`} description={product.meta_description ?? product.description?.slice(0, 160) ?? ""} ogImage={product.image_url} ogType="product" structuredData={productSchema} tags={product.tags ?? []}>
+  <div class="pt-28 pb-24 px-6 lg:px-12 max-w-7xl mx-auto">
+    <nav class="text-xs text-[#6b6155] mb-8 flex items-center gap-2"><a href="/" class="hover:text-[#c0392b]">Home</a><span>/</span><a href="/shop" class="hover:text-[#c0392b]">Shop</a><span>/</span><span class="text-[#1a1009]">{product.name}</span></nav>
+    <div class="grid lg:grid-cols-2 gap-16 items-start">
+      <div class="sticky top-28">
+        <div class="aspect-square overflow-hidden bg-[#f0ece4] rounded-sm">
+          <img id="product-image" src={product.image_url} alt={product.name} class="w-full h-full object-cover" loading="eager" />
+        </div>
+      </div>
+      <div>
+        {product.tags?.[0] && (<p class="text-xs text-[#6b6155] uppercase tracking-widest mb-3">{product.tags[0]}</p>)}
+        <h1 class="font-display text-4xl lg:text-5xl font-bold leading-tight mb-4">{product.name}</h1>
+        <div class="flex items-center gap-3 mb-6">
+          <span class="font-display text-3xl font-bold">£{(product.price_pence / 100).toFixed(2)}</span>
+          {product.compare_at_pence && product.compare_at_pence > product.price_pence && (<><span class="text-lg text-[#6b6155] line-through">£{(product.compare_at_pence / 100).toFixed(2)}</span><span class="bg-[#c0392b] text-white text-xs font-semibold px-2 py-0.5">Save £{((product.compare_at_pence - product.price_pence) / 100).toFixed(2)}</span></>)}
+        </div>
+        <p class="text-[#3a3a3a] leading-relaxed mb-8">{product.description}</p>
+        {hasVariants && (
+          <div class="space-y-6 mb-8">
+            {colors.length > 0 && (
+              <div>
+                <p class="text-sm font-semibold mb-3">Colour: <span id="selected-color" class="font-normal capitalize text-[#6b6155]">{colors[0]}</span></p>
+                <div class="flex gap-2 flex-wrap" id="color-selector">
+                  {colors.map((color: string) => (<button class="color-btn px-4 py-2 text-sm border border-[#e8e2d6] capitalize hover:border-[#c0392b] transition-colors" data-color={color} data-selected={color === colors[0] ? 'true' : 'false'}>{color}</button>))}
+                </div>
+              </div>
+            )}
+            {sizes.length > 0 && (
+              <div>
+                <p class="text-sm font-semibold mb-3">Size: <span id="selected-size" class="font-normal text-[#6b6155]">{sizes[0]}</span></p>
+                <div class="flex gap-2 flex-wrap" id="size-selector">
+                  {sizes.map((size: string) => (<button class="size-btn w-14 h-14 text-sm border border-[#e8e2d6] hover:border-[#c0392b] transition-colors" data-size={size} data-selected={size === sizes[0] ? 'true' : 'false'}>{size}</button>))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        <div class="space-y-3">
+          <button id="add-to-cart" class="btn-primary w-full text-center py-4 text-sm font-semibold" data-product-id={product.id} data-product-name={product.name} data-price={product.price_pence} data-image={product.image_url} data-variants={JSON.stringify(productVariants ?? [])}>
+            Add to cart — £{(product.price_pence / 100).toFixed(2)}
+          </button>
+          <p id="add-to-cart-msg" class="text-sm text-center hidden"></p>
+        </div>
+        <div class="mt-8 pt-8 border-t border-[#e8e2d6] space-y-3">
+          {product.requires_shipping && (<div class="flex items-center gap-3 text-sm text-[#6b6155]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Free UK delivery on orders over £40</div>)}
+          {product.is_digital && (<div class="flex items-center gap-3 text-sm text-[#6b6155]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Instant download after purchase</div>)}
+          <div class="flex items-center gap-3 text-sm text-[#6b6155]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>30-day returns guarantee</div>
+        </div>
+        {product.body_html && (<div class="mt-8 pt-8 border-t border-[#e8e2d6] prose prose-sm max-w-none text-[#3a3a3a]" set:html={safeHtml(product.body_html)} />)}
+      </div>
+    </div>
+  </div>
+</Base>
+<script>
+  const variantsData = JSON.parse(document.getElementById('add-to-cart')?.dataset.variants ?? '[]');
+  let selectedColor = ''; let selectedSize = '';
+  const firstColor = document.querySelector('.color-btn') as HTMLButtonElement | null;
+  const firstSize = document.querySelector('.size-btn') as HTMLButtonElement | null;
+  function highlightBtn(btn: HTMLButtonElement, selector: string) {
+    document.querySelectorAll(selector).forEach(b => { (b as HTMLButtonElement).classList.remove('border-[#c0392b]','bg-[#1a1009]','text-white'); });
+    btn.classList.add('border-[#c0392b]','bg-[#1a1009]','text-white');
+  }
+  if (firstColor) { selectedColor = firstColor.dataset.color!; highlightBtn(firstColor, '.color-btn'); }
+  if (firstSize) { selectedSize = firstSize.dataset.size!; highlightBtn(firstSize, '.size-btn'); }
+  document.getElementById('color-selector')?.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('.color-btn') as HTMLButtonElement | null; if (!btn) return;
+    selectedColor = btn.dataset.color!; document.getElementById('selected-color')!.textContent = selectedColor; highlightBtn(btn, '.color-btn');
+  });
+  document.getElementById('size-selector')?.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('.size-btn') as HTMLButtonElement | null; if (!btn) return;
+    selectedSize = btn.dataset.size!; document.getElementById('selected-size')!.textContent = selectedSize; highlightBtn(btn, '.size-btn');
+  });
+  document.getElementById('add-to-cart')?.addEventListener('click', () => {
+    const btn = document.getElementById('add-to-cart') as HTMLButtonElement;
+    const msgEl = document.getElementById('add-to-cart-msg')!;
+    const productId = btn.dataset.productId!; const name = btn.dataset.productName!;
+    const pricePence = parseInt(btn.dataset.price!); const imageUrl = btn.dataset.image!;
+    let variantSku = '';
+    if (variantsData.length > 0) {
+      const v = variantsData.find((vv: any) => { const cm = !selectedColor || !vv.color || vv.color === selectedColor; const sm = !selectedSize || !vv.size || vv.size === selectedSize; return cm && sm; }) ?? variantsData[0];
+      variantSku = v?.sku ?? '';
+    }
+    const cart = JSON.parse(localStorage.getItem('ht_cart') ?? '[]');
+    const existing = cart.find((i: any) => i.product_id === productId && i.variant_sku === variantSku);
+    if (existing) { existing.qty++; } else { cart.push({ product_id: productId, variant_sku: variantSku, qty: 1, name, price_pence: pricePence, image_url: imageUrl, size: selectedSize || undefined, color: selectedColor || undefined }); }
+    localStorage.setItem('ht_cart', JSON.stringify(cart));
+    window.dispatchEvent(new CustomEvent('cart-updated'));
+    btn.textContent = '✓ Added to cart';
+    msgEl.textContent = 'Item added! Open your cart to checkout.';
+    msgEl.className = 'text-sm text-center text-green-700'; msgEl.classList.remove('hidden');
+    setTimeout(() => { btn.textContent = `Add to cart — £${(pricePence / 100).toFixed(2)}`; msgEl.classList.add('hidden'); }, 2500);
+  });
+</script>
