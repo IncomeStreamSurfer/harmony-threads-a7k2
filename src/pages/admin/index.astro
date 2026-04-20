@@ -1,0 +1,19 @@
+---
+export const prerender = false;
+import Base from "../../layouts/Base.astro";
+---
+<Base title="Admin Dashboard | Harmony Threads" description="" noindex={true}>
+  <div class="pt-28 pb-24 px-6 lg:px-12 max-w-6xl mx-auto">
+    <h1 class="font-display text-4xl font-bold mb-2">Admin Dashboard</h1>
+    <p class="text-[#6b6155] mb-8">Manage your Harmony Threads store content.</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {[{title:"Products",href:"/admin/products",icon:"🛍️",desc:"Edit product names, descriptions, prices and images"},{title:"Pages",href:"/admin/pages",icon:"📄",desc:"Edit your marketing pages"},{title:"Blog / Content",href:"/admin/content",icon:"✍️",desc:"Manage articles and stories"},{title:"Testimonials",href:"/admin/testimonials",icon:"⭐",desc:"Add and edit customer reviews"},{title:"FAQs",href:"/admin/faqs",icon:"❓",desc:"Edit frequently asked questions"},{title:"Orders",href:"/admin/orders",icon:"📦",desc:"View customer orders"}].map(item => (
+        <a href={item.href} class="block p-6 border border-[#e8e2d6] bg-white hover:border-[#c0392b] transition-colors rounded-sm group">
+          <div class="text-3xl mb-3">{item.icon}</div>
+          <h2 class="font-display text-xl font-semibold mb-2 group-hover:text-[#c0392b] transition-colors">{item.title}</h2>
+          <p class="text-sm text-[#6b6155]">{item.desc}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</Base>

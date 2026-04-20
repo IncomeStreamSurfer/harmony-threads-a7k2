@@ -1,0 +1,63 @@
+---
+export const prerender = false;
+import Base from "../../layouts/Base.astro";
+import { anonClient } from "../../lib/supabase";
+
+const url = new URL(Astro.request.url);
+const typeFilter = url.searchParams.get("type") ?? "";
+
+const sb = anonClient();
+let products: any[] = [];
+
+if (sb) {
+  let query = sb.from("products").select("id, slug, name, description, price_pence, compare_at_pence, currency, image_url, tags, is_digital, requires_shipping").not("published_at", "is", null).order("created_at", { ascending: true });
+  if (typeFilter === "digital") query = query.eq("is_digital", true);
+  else if (typeFilter === "tshirt") query = query.eq("is_digital", false);
+  const { data } = await query;
+  products = data ?? [];
+}
+
+const collectionSchema = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Harmony Threads Shop",
+  "url": (Astro.site?.toString() ?? "https://harmony-threads-a7k2.vercel.app") + "/shop",
+  "mainEntity": { "@type": "ItemList", "itemListElement": products.map((p, i) => ({ "@type": "ListItem", "position": i + 1, "url": (Astro.site?.toString() ?? "") + "/shop/" + p.slug, "name": p.name })) },
+};
+---
+<Base title="Shop All Products | Harmony Threads" description="Browse all products from Harmony Threads — vintage rock graphic tees, digital music history books, and premium fragrances." structuredData={collectionSchema}>
+  <div class="pt-28 pb-24 px-6 lg:px-12 max-w-7xl mx-auto">
+    <div class="mb-12">
+      <nav class="text-xs text-[#6b6155] mb-4"><a href="/" class="hover:text-[#c0392b]">Home</a><span class="mx-2">/</span><span>Shop</span></nav>
+      <h1 class="font-display text-5xl font-bold leading-tight mb-4">The Collection</h1>
+      <p class="text-[#6b6155] max-w-xl">Music you can wear, stories you can keep. Every piece hand-picked for true fans.</p>
+    </div>
+    <div class="flex gap-2 mb-10 border-b border-[#e8e2d6] pb-0">
+      <a href="/shop" class={`text-sm font-medium px-4 py-2 border-b-2 transition-colors ${!typeFilter ? 'border-[#c0392b] text-[#c0392b]' : 'border-transparent text-[#6b6155] hover:text-[#1a1009]'}`}>All ({products.length})</a>
+      <a href="/shop?type=tshirt" class={`text-sm font-medium px-4 py-2 border-b-2 transition-colors ${typeFilter === 'tshirt' ? 'border-[#c0392b] text-[#c0392b]' : 'border-transparent text-[#6b6155] hover:text-[#1a1009]'}`}>Apparel</a>
+      <a href="/shop?type=digital" class={`text-sm font-medium px-4 py-2 border-b-2 transition-colors ${typeFilter === 'digital' ? 'border-[#c0392b] text-[#c0392b]' : 'border-transparent text-[#6b6155] hover:text-[#1a1009]'}`}>Digital</a>
+    </div>
+    {products.length === 0 ? (<p class="text-[#6b6155] py-20 text-center">No products found.</p>) : (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {products.map(product => (
+          <a href={`/shop/${product.slug}`} class="group">
+            <div class="aspect-square overflow-hidden bg-[#f0ece4] rounded-sm relative mb-4">
+              <img src={product.image_url} alt={product.name} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+              {product.compare_at_pence && product.compare_at_pence > product.price_pence && (<span class="absolute top-3 left-3 bg-[#c0392b] text-white text-xs font-semibold px-2 py-1">SALE</span>)}
+              {product.is_digital && (<span class="absolute top-3 right-3 bg-[#1a1009] text-white text-xs font-semibold px-2 py-1">DIGITAL</span>)}
+            </div>
+            <div>
+              <p class="text-xs text-[#6b6155] uppercase tracking-widest mb-1">{product.is_digital ? "Digital Download" : "Apparel"}</p>
+              <h2 class="font-display text-xl font-semibold leading-snug mb-2 group-hover:text-[#c0392b] transition-colors">{product.name}</h2>
+              <p class="text-sm text-[#6b6155] leading-relaxed mb-3 line-clamp-2">{product.description?.slice(0, 120)}</p>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-lg">£{(product.price_pence / 100).toFixed(2)}</span>
+                {product.compare_at_pence && product.compare_at_pence > product.price_pence && (<span class="text-sm text-[#6b6155] line-through">£{(product.compare_at_pence / 100).toFixed(2)}</span>)}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</Base>

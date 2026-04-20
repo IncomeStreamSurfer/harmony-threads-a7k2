@@ -1,0 +1,41 @@
+---
+export const prerender = false;
+import Base from "../layouts/Base.astro";
+const siteUrl = Astro.site?.toString() ?? "https://harmony-threads-a7k2.vercel.app";
+const aboutSchema = { "@context": "https://schema.org", "@type": "AboutPage", "name": "About Harmony Threads", "url": `${siteUrl}/about` };
+const breadcrumb = { "@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{ "@type": "ListItem", "position": 1, "name": "Home", "item": siteUrl }, { "@type": "ListItem", "position": 2, "name": "About", "item": `${siteUrl}/about` }] };
+---
+<Base title="About Harmony Threads — Our Story | Vintage Rock Merch" description="The story behind Harmony Threads — a music-obsessed team hand-picking the best vintage rock graphic tees, rare prints and digital music history." structuredData={[aboutSchema, breadcrumb]}>
+  <div class="pt-28">
+    <section class="bg-[#1a1009] py-24 px-6 lg:px-12 relative overflow-hidden">
+      <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 70% 50%, #c0392b 0%, transparent 60%);"></div>
+      <div class="max-w-4xl mx-auto relative">
+        <nav class="text-xs text-[#6b6155] mb-8"><a href="/" class="hover:text-[#c0392b]">Home</a><span class="mx-2">/</span><span class="text-[#a09080]">About</span></nav>
+        <p class="text-[#c0392b] text-xs font-semibold uppercase tracking-[0.2em] mb-4">Our story</p>
+        <h1 class="font-display text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">Born from a<br />record shop argument.</h1>
+        <p class="text-[#a09080] text-xl leading-relaxed max-w-2xl">Harmony Threads started with a simple conviction: the merch should be as good as the music.</p>
+      </div>
+    </section>
+    <section class="py-24 px-6 lg:px-12 max-w-4xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-16 items-start mb-20">
+        <div>
+          <h2 class="font-display text-3xl font-bold mb-6">Why we started this</h2>
+          <p class="text-[#3a3a3a] leading-relaxed mb-4">In 2024, after one too many tour tees that faded in the first wash, we set out to do something about it. We're a small team of music obsessives based in London — people who own hundreds of records and have the venue stamps on their hands to prove it.</p>
+          <p class="text-[#3a3a3a] leading-relaxed mb-4">We believe rock music left a cultural mark that deserves to be worn proudly, not on a shirt that disintegrates by Christmas. So we build every product around the music first — the stories, the sounds, the soul.</p>
+          <p class="text-[#3a3a3a] leading-relaxed">Every graphic tee is printed on GOTS-certified organic cotton in fair-wage facilities in Portugal. Every digital download is written by music historians, not content mills.</p>
+        </div>
+        <div><div class="aspect-[4/3] overflow-hidden rounded-sm"><img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80" alt="Live concert crowd" class="w-full h-full object-cover" loading="lazy" /></div></div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8 pt-12 border-t border-[#e8e2d6]">
+        {[{title:"Ethically made",body:"GOTS-certified cotton, fair wages, low-impact printing."},{title:"Curated, not catalogued",body:"We choose a handful of products we'd personally wear to a show."},{title:"Music-first design",body:"Every graphic tells a story rooted in the band, the era, the sound."}].map(v => (
+          <div><div class="w-10 h-0.5 bg-[#c0392b] mb-4"></div><h3 class="font-display text-xl font-semibold mb-3">{v.title}</h3><p class="text-[#6b6155] text-sm leading-relaxed">{v.body}</p></div>
+        ))}
+      </div>
+    </section>
+    <section class="bg-[#f0ece4] py-20 px-6 text-center">
+      <h2 class="font-display text-4xl font-bold mb-4">Ready to wear the music?</h2>
+      <p class="text-[#6b6155] mb-8 max-w-lg mx-auto">Browse our current collection — from The Band's iconic graphic tee to deep-cut digital music history.</p>
+      <a href="/shop" class="btn-primary text-sm">Shop the collection</a>
+    </section>
+  </div>
+</Base>
