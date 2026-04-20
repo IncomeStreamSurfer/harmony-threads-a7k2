@@ -1,0 +1,33 @@
+---
+export const prerender = false;
+import Base from "../../layouts/Base.astro";
+
+const sessionId = new URL(Astro.request.url).searchParams.get("session_id");
+---
+<Base
+  title="Order Confirmed | Harmony Threads"
+  description="Your order has been confirmed. Thank you for shopping with Harmony Threads."
+  noindex={true}
+>
+  <div class="pt-32 pb-24 px-6 max-w-2xl mx-auto text-center">
+    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <h1 class="font-display text-4xl font-bold mb-4">Order confirmed.</h1>
+    <p class="text-[#6b6155] text-lg leading-relaxed mb-8">
+      Thank you for your order! We've sent a confirmation email with your order details.
+      {sessionId && <><br /><span class="text-sm font-mono text-[#8a8a8a]">Ref: {sessionId.slice(-10).toUpperCase()}</span></>}
+    </p>
+    <div class="space-y-3">
+      <a href="/shop" class="btn-primary block text-sm">Continue shopping</a>
+      <a href="/" class="text-sm text-[#6b6155] hover:text-[#c0392b] block mt-2">Back to home</a>
+    </div>
+  </div>
+</Base>
+
+<script>
+  localStorage.removeItem('ht_cart');
+  window.dispatchEvent(new CustomEvent('cart-updated'));
+</script>
