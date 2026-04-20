@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Work Sans", system-ui, sans-serif;
+  --color-accent: #c0392b;
+  --color-accent-dark: #922b21;
+  --color-paper: #faf7f2;
+  --color-ink: #1a1009;
+  --color-muted: #6b6155;
+  --color-border: #e8e2d6;
+}
+
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/fraunces/v31/6NUt8FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe.woff2") format("woff2");
+}
+
+html {
+  font-family: "Work Sans", system-ui, sans-serif;
+  background-color: #faf7f2;
+  color: #1a1009;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.font-display {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+.btn-primary {
+  display: inline-block;
+  background: #c0392b;
+  color: #fff;
+  padding: 0.75rem 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background 0.2s, transform 0.15s;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background: #922b21;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  display: inline-block;
+  border: 1.5px solid #1a1009;
+  color: #1a1009;
+  padding: 0.7rem 1.6rem;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+.btn-secondary:hover {
+  background: #1a1009;
+  color: #faf7f2;
+}
+
+.prose h1, .prose h2, .prose h3 {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
